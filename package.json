@@ -1,13 +1,17 @@
 {
   "name": "nedb-promise",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "A promise wrapper around the nedb package",
-  "keywords": ["nedb", "promise"],
+  "keywords": [
+    "nedb",
+    "promise"
+  ],
   "main": "index.js",
   "author": "Jonathan Apodaca",
   "license": "ISC",
   "dependencies": {
     "babel-runtime": "^5.8.20",
+    "bluebird": "^2.9.34",
     "nedb": "^1.1.3"
   },
   "devDependencies": {

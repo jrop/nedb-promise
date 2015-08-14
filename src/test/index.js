@@ -1,178 +1,205 @@
 import assert from 'assert'
-import Datastore from '../index'
+import datastore from '../index'
 import path from 'path'
 import _ from 'lodash'
 
 function makeDB(opts) {
 	let filename = path.resolve(path.join(__dirname, 'test-db.json'))
-	// console.log(filename)
 	opts = _.extend({ filename }, opts || { })
-	return new Datastore(opts)
+	return datastore(opts)
 }
 
-describe('Datastore', () => {
-	before(async (done) => {
-		// console.log('<<<before')
-		
-		let DB = makeDB({ autoload: true })
-		await DB.remove({}, { multi: true })
-		
-		await DB.insert([{
-			num: 1,
-			alpha: 'a'
-		}, {
-			num: 2,
-			alpha: 'b'
-		}, {
-			num: 3,
-			alpha: 'c'
-		}])
+describe('datastore', () => {
+	let DB = makeDB({ autoload: true })
 
+	//
+	// before each: clear and then stage data
+	//
+	beforeEach(async (done) => {
+		try {
+			await DB.removeAsync({}, { multi: true })
+			
+			await DB.insertAsync([{
+				num: 1,
+				alpha: 'a'
+			}, {
+				num: 2,
+				alpha: 'b'
+			}, {
+				num: 3,
+				alpha: 'c'
+			}])
+		} catch (e) {
+			return done(e)
+		}
 		done()
 	})
 
-	describe('#find()', () => {
+	describe('#findAsync()', () => {
 		it('should return them all', async (done) => {
-			let DB = makeDB({ autoload: true })
-			assert.equal((await DB.find({})).length, 3)
+			try {
+				assert.equal((await DB.findAsync({})).length, 3)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 
 		it('should only return 1', async (done) => {
-			let DB = makeDB({ autoload: true })
-			assert.equal((await DB.find({ num: 3 })).length, 1)
+			try {
+				assert.equal((await DB.findAsync({ num: 3 })).length, 1)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 
 		it ('should project', async (done) => {
-			let DB = makeDB({ autoload: true })
-			let doc = await DB.find({ num: 3 }, true)
-				.projection({ num: 1, _id: 0 })
-				.exec()
+			try {
+				let doc = await DB.cfind({ num: 3 })
+					.projection({ num: 1, _id: 0 })
+					.execAsync()
 
-			doc = doc[0]
-			assert.equal(doc.num, 3)
-			assert.equal(doc.alpha, undefined)
-
+				doc = doc[0]
+				assert.equal(doc.num, 3)
+				assert.equal(doc.alpha, undefined)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 
 		it('should sort', async (done) => {
-			let DB = makeDB({ autoload: true })
+			try {
+				let docs = await DB.cfind({})
+					.sort({ num: -1 })
+					.execAsync()
 
-			let docs = await DB.find({}, true)
-				.sort({ num: -1 })
-				.exec()
+				docs = _.chain(docs)
+					.map(d => d.num)
+					.value()
 
-			docs = _.chain(docs)
-				.map(d => d.num)
-				.value()
-
-			let assertion = docs[0] == 3 && docs[1] == 2 && docs[2] == 1
-			assert(assertion)
-
+				let assertion = docs[0] == 3 && docs[1] == 2 && docs[2] == 1
+				assert(assertion)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 	})
 
-	describe('#findOne()', () => {
+	describe('#findOneAsync()', () => {
 		it('should only return one', async (done) => {
-			let DB = makeDB({ autoload: true })
-			let doc = await DB.findOne({ num: 2 })
-			assert.equal(doc.num, 2)
-
+			try {
+				let doc = await DB.findOneAsync({ num: 2 })
+				assert.equal(doc.num, 2)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 
 		it('should project', async(done) => {
-			let DB = makeDB({ autoload: true })
-			let doc = await DB.findOne({ num: 2 }, true)
-				.projection({ num: 1, _id: false })
-				.exec()
+			try {
+				let doc = await DB.cfindOne({ num: 2 }, true)
+					.projection({ num: 1, _id: false })
+					.execAsync()
 
-			assert.equal(doc.num, 2)
-			assert.equal(doc.alpha, undefined)
-
+				assert.equal(doc.num, 2)
+				assert.equal(doc.alpha, undefined)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 	})
 
-	describe('#count()', () => {
+	describe('#countAsync()', () => {
 		it('should return the number of documents in the database', async (done) => {
-			let DB = makeDB({ autoload: true })
-			let count = await DB.count({})
+			try {
+				let count = await DB.countAsync({})
 
-			assert.equal(count, 3)
-
+				assert.equal(count, 3)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 	})
 
-	describe('#insert()', () => {
+	describe('#insertAsync()', () => {
 		it('should insert two documents', async (done) => {
-			let DB = makeDB({ autoload: true })
-			
-			let beforeCount = await DB.count({})
-			let docs = await DB.insert([{
-				num: 4,
-				alpha: 'd'
-			}, {
-				num: 5,
-				alpha: 'e'
-			}])
-			let afterCount = await DB.count({})
+			try {
+				let beforeCount = await DB.countAsync({})
+				let docs = await DB.insertAsync([{
+					num: 4,
+					alpha: 'd'
+				}, {
+					num: 5,
+					alpha: 'e'
+				}])
+				let afterCount = await DB.countAsync({})
 
-			assert.equal(afterCount - beforeCount, 2)
-
+				assert.equal(afterCount - beforeCount, 2)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 	})
 
-	describe('#update()', () => {
+	describe('#updateAsync()', () => {
 		it('should update a document', async (done) => {
-			let DB = makeDB({ autoload: true })
-			await DB.update({ num: 5 }, { $set: { updated: true } })
-			let updated = await DB.findOne({ num: 5 })
-			assert(updated.updated)
-
+			try {
+				await DB.updateAsync({ num: 3 }, { $set: { updated: true } })
+				let updated = await DB.findOneAsync({ num: 3 })
+				assert(updated.updated)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 
 		it('should insert a new document', async(done) => {
-			let DB = makeDB({ autoload: true })
-			
-			let beforeCount = await DB.count({})
-			await DB.update({ num: 6 }, {
-				num: 6,
-				alpha: 'f'
-			}, { upsert: true })
-			let afterCount = await DB.count({})
+			try {
+				let beforeCount = await DB.countAsync({})
+				await DB.updateAsync({ num: 4 }, {
+					num: 4,
+					alpha: 'f'
+				}, { upsert: true })
+				let afterCount = await DB.countAsync({})
 
-			assert.equal(afterCount - beforeCount, 1)
-
+				assert.equal(afterCount - beforeCount, 1)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 	})
 
-	describe('#remove()', () => {
+	describe('#removeAsync()', () => {
 		it('should remove a document', async (done) => {
-			let DB = makeDB({ autoload: true })
-			let beforeCount = await DB.count({})
-			await DB.remove({})
-			let afterCount = await DB.count({})
+			try {
+				let beforeCount = await DB.countAsync({})
+				await DB.removeAsync({})
+				let afterCount = await DB.countAsync({})
 
-			assert.equal(beforeCount - afterCount, 1)
-
+				assert.equal(beforeCount - afterCount, 1)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 
 		it('should remove all documents', async (done) => {
-			let DB = makeDB({ autoload: true })
-			await DB.remove({}, { multi: true })
-			let afterCount = await DB.count({})
+			try {
+				await DB.removeAsync({}, { multi: true })
+				let afterCount = await DB.countAsync({})
 
-			assert.equal(afterCount, 0)
-
+				assert.equal(afterCount, 0)
+			} catch (e) {
+				return done(e)
+			}
 			done()
 		})
 	})
