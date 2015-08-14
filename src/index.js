@@ -104,3 +104,5 @@ export default class Datastore {
 		this.dataStore.persistence.stopAutoCompaction()
 	}
 }
+
+export { Datastore }
