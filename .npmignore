@@ -1,0 +1,5 @@
+src/
+build/test/
+gulpfile.js
+.npmignore
+.gitignore
