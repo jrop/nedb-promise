@@ -32,12 +32,12 @@ async function doDatabaseStuff() {
     num: 2, alpha: 'b'
   }])
 
-  let document = await DB.findOne({ num: 1 })
+  let document = await DB.findOneAsync({ num: 1 })
 
   // use NeDB cursors:
-  let documents = await DB.cfindAsync({})
+  let documents = await DB.cfind({})
     .projection({ num: 1, _id: 0 })
-    .exec()
+    .execAsync()
 }
 
 doDatabaseStuff()
@@ -65,7 +65,9 @@ Building
 
 Build with gulp:
 
-`$ gulp`
+```
+$ gulp
+```
 
 Testing
 =======
