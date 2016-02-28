@@ -15,10 +15,10 @@ Usage
 
 Example using ES7 async/await:
 ```
-import { datastore } from 'nedb-promise'
+import datastore from 'nedb-promise'
 
 async function doDatabaseStuff() {
-  let DB = new datastore({
+  let DB = datastore({
      // these options are passed through to nedb.Datastore
 
      filename: 'my-db.json',
@@ -57,16 +57,7 @@ It also includes the two extension methods `cfind(...)`, and `cfindOne(...)` tha
 ```
 let results = await myDataStore.cfindA({ moo: 'goo' })
   .projection({ moo: 1, _id: 0 }) // see NeDB cursor methods
-  .exec()
-```
-
-Building
-========
-
-Build with gulp:
-
-```
-$ gulp
+  .execAsync()
 ```
 
 Testing
@@ -75,8 +66,7 @@ Testing
 Run tests with mocha (after building):
 
 ```
-$ cd build/
-$ mocha
+$ mocha test.js
 ```
 
 License

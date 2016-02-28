@@ -1,24 +1,26 @@
 {
   "name": "nedb-promise",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A promise wrapper around the nedb package",
   "keywords": [
     "nedb",
     "promise"
   ],
   "main": "index.js",
+  "scripts": {
+    "coverage": "istanbul cover _mocha test.js",
+    "test": "mocha test.js"
+  },
   "author": "Jonathan Apodaca",
   "license": "ISC",
   "dependencies": {
-    "babel-runtime": "^5.8.20",
-    "bluebird": "^2.9.34",
-    "nedb": "^1.1.3"
+    "nedb": "^1.1.3",
+    "thenify": "^3.2.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-babel": "^5.2.0",
-    "lodash": "^3.10.1",
-    "rimraf": "^2.4.2"
+    "co": "^4.6.0",
+    "istanbul": "^0.4.2",
+    "lodash": "^4.5.1"
   },
   "repository": "jrop/nedb-promise"
 }

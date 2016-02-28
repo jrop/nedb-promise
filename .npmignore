@@ -1,5 +1,4 @@
-src/
-build/test/
-gulpfile.js
 .npmignore
 .gitignore
+test-db.json
+coverage/
