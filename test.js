@@ -6,22 +6,16 @@ const datastore = require('./index')
 const path = require('path')
 const _ = require('lodash')
 
-function makeDB(opts) {
-	const filename = path.resolve(path.join(__dirname, 'test-db.json'))
-	opts = _.extend({ filename }, opts || { })
-	return datastore(opts)
-}
-
 describe('datastore', () => {
-	const DB = makeDB({ autoload: true })
+	const DB = datastore({ autoload: true })
 
 	//
 	// before each: clear and then stage data
 	//
 	beforeEach(co.wrap(function * () {
-		yield DB.removeAsync({ }, { multi: true })
+		yield DB.remove({ }, { multi: true })
 		
-		yield DB.insertAsync([ {
+		yield DB.insert([ {
 			num: 1,
 			alpha: 'a'
 		}, {
@@ -33,19 +27,19 @@ describe('datastore', () => {
 		} ])
 	}))
 
-	describe('#findAsync()', () => {
+	describe('#find()', () => {
 		it('should return them all', co.wrap(function * () {
-			assert.equal((yield DB.findAsync({})).length, 3)
+			assert.equal((yield DB.find({})).length, 3)
 		}))
 
 		it('should only return 1', co.wrap(function * () {
-			assert.equal((yield DB.findAsync({ num: 3 })).length, 1)
+			assert.equal((yield DB.find({ num: 3 })).length, 1)
 		}))
 
 		it ('should project', co.wrap(function * () {
 			let doc = yield DB.cfind({ num: 3 })
 				.projection({ num: 1, _id: 0 })
-				.execAsync()
+				.exec()
 
 			doc = doc[0]
 			assert.equal(doc.num, 3)
@@ -55,7 +49,7 @@ describe('datastore', () => {
 		it('should sort', co.wrap(function * () {
 			let docs = yield DB.cfind({})
 				.sort({ num: -1 })
-				.execAsync()
+				.exec()
 
 			docs = _.chain(docs)
 				.map(d => d.num)
@@ -66,78 +60,95 @@ describe('datastore', () => {
 		}))
 	})
 
-	describe('#findOneAsync()', () => {
+	describe('#findOne()', () => {
 		it('should only return one', co.wrap(function * () {
-			let doc = yield DB.findOneAsync({ num: 2 })
+			let doc = yield DB.findOne({ num: 2 })
 			assert.equal(doc.num, 2)
 		}))
 
 		it('should project', co.wrap(function * () {
 			let doc = yield DB.cfindOne({ num: 2 }, true)
 				.projection({ num: 1, _id: false })
-				.execAsync()
+				.exec()
 
 			assert.equal(doc.num, 2)
 			assert.equal(doc.alpha, undefined)
 		}))
 	})
 
-	describe('#countAsync()', () => {
+	describe('#count()', () => {
 		it('should return the number of documents in the database', co.wrap(function * () {
-			let count = yield DB.countAsync({})
+			let count = yield DB.count({})
 			assert.equal(count, 3)
+		}))
+
+		it('should work with cursors', co.wrap(function * () {
+			const count = yield DB.ccount({}).limit(2).exec()
+			assert.equal(count, 2)
 		}))
 	})
 
-	describe('#insertAsync()', () => {
+	describe('#insert()', () => {
 		it('should insert two documents', co.wrap(function * () {
-			let beforeCount = yield DB.countAsync({})
-			let docs = yield DB.insertAsync([{
+			let beforeCount = yield DB.count({})
+			let docs = yield DB.insert([{
 				num: 4,
 				alpha: 'd'
 			}, {
 				num: 5,
 				alpha: 'e'
 			}])
-			let afterCount = yield DB.countAsync({})
+			let afterCount = yield DB.count({})
 
 			assert.equal(afterCount - beforeCount, 2)
 		}))
 	})
 
-	describe('#updateAsync()', () => {
+	describe('#update()', () => {
 		it('should update a document', co.wrap(function * () {
-			yield DB.updateAsync({ num: 3 }, { $set: { updated: true } })
-			let updated = yield DB.findOneAsync({ num: 3 })
+			yield DB.update({ num: 3 }, { $set: { updated: true } })
+			let updated = yield DB.findOne({ num: 3 })
 			assert(updated.updated)
 		}))
 
 		it('should insert a new document', co.wrap(function * () {
-			let beforeCount = yield DB.countAsync({})
-			yield DB.updateAsync({ num: 4 }, {
+			let beforeCount = yield DB.count({})
+			yield DB.update({ num: 4 }, {
 				num: 4,
 				alpha: 'f'
 			}, { upsert: true })
-			let afterCount = yield DB.countAsync({})
+			let afterCount = yield DB.count({})
 
 			assert.equal(afterCount - beforeCount, 1)
 		}))
 	})
 
-	describe('#removeAsync()', () => {
+	describe('#remove()', () => {
 		it('should remove a document', co.wrap(function * () {
-			let beforeCount = yield DB.countAsync({})
-			yield DB.removeAsync({})
-			let afterCount = yield DB.countAsync({})
+			let beforeCount = yield DB.count({})
+			yield DB.remove({})
+			let afterCount = yield DB.count({})
 
 			assert.equal(beforeCount - afterCount, 1)
 		}))
 
 		it('should remove all documents', co.wrap(function * () {
-			yield DB.removeAsync({}, { multi: true })
-			let afterCount = yield DB.countAsync({})
+			yield DB.remove({}, { multi: true })
+			let afterCount = yield DB.count({})
 
 			assert.equal(afterCount, 0)
+		}))
+	})
+
+	describe('Cursors', () => {
+		it('should work with no suffix', co.wrap(function * () {
+			const db = datastore('')
+			yield db.insert([ { id: 2, name: 'Tim' }, { id: 1, name: 'Tom' } ])
+			const res = yield db.cfind().sort({ name: -1 }).projection({ name: 1 }).exec()
+
+			assert.equal(res[0].name, 'Tom')
+			assert.equal(res[1].name, 'Tim')
+			assert.equal(typeof res[0].id, 'undefined')
 		}))
 	})
 })

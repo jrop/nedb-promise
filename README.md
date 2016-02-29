@@ -26,18 +26,18 @@ async function doDatabaseStuff() {
      autoload: true // so that we don't have to call loadDatabase()
   })
 
-  await DB.insertAsync([{
+  await DB.insert([{
     num: 1, alpha: 'a'
   }, {
     num: 2, alpha: 'b'
   }])
 
-  let document = await DB.findOneAsync({ num: 1 })
+  let document = await DB.findOne({ num: 1 })
 
   // use NeDB cursors:
   let documents = await DB.cfind({})
     .projection({ num: 1, _id: 0 })
-    .execAsync()
+    .exec()
 }
 
 doDatabaseStuff()
@@ -48,17 +48,19 @@ API
 
 ## datastore(options)
 
-Returns an extended `nedb.Datastore` instance (`options` are passed through to the NeDB constructor), with promisified methods (suffixed with 'Async').
+Returns an object that proxies to an internal `nedb.Datastore` instance (`options` are passed through to the NeDB constructor), with promisified methods.
 
-For example, you may use `findAsync(...)`, `insertAsync(...)`, etc.
-
-It also includes the two extension methods `cfind(...)`, and `cfindOne(...)` that return promisified cursors, so that you may do:
+It also includes extension methods `cfind(...)`, `cfindOne(...)`, and `ccount(...)` that return promisified cursors, so that you may do:
 
 ```
-let results = await myDataStore.cfindA({ moo: 'goo' })
+let results = await myDataStore.cfind({ moo: 'goo' })
   .projection({ moo: 1, _id: 0 }) // see NeDB cursor methods
-  .execAsync()
+  .exec()
 ```
+
+## datastore.fromInstance(nedbInstance)
+
+Use this method if you already have a NeDB instance that you want to wrap with the promisified methods.
 
 Testing
 =======

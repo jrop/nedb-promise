@@ -1,32 +1,43 @@
 var NedbDatastore = require('nedb')
 var thenify = require('thenify')
 
+function fromInstance(nedbInstance) {
+	var newDB = { nedb: nedbInstance }
+
+	var methods = [ 'loadDatabase', 'insert', 'find', 'findOne', 'count', 'update', 'remove', 'ensureIndex', 'removeIndex' ]
+	for (var i = 0; i < methods.length; ++i) {
+		var m = methods[i]
+		newDB[m] = thenify(nedbInstance[m].bind(nedbInstance))
+	}
+
+	newDB.cfind = function(query, projections) {
+		var cursor = nedbInstance.find(query, projections)
+		cursor.exec = thenify(cursor.exec.bind(cursor))
+		return cursor
+	}
+
+	newDB.cfindOne = function(query, projections) {
+		var cursor = nedbInstance.findOne(query, projections)
+		cursor.exec = thenify(cursor.exec.bind(cursor))
+		return cursor
+	}
+
+	newDB.ccount = function(query) {
+		var cursor = nedbInstance.count(query)
+		cursor.exec = thenify(cursor.exec.bind(cursor))
+		return cursor
+	}
+
+	return newDB
+}
+
 function datastore(options) {
-	options = options || { }
-	var DB = new NedbDatastore(options)
-
-	DB.cfind = function(spec, opts) {
-		var c = DB.find(spec, opts)
-		c.execAsync = thenify(c.exec.bind(c))
-		return c
-	}
-
-	DB.cfindOne = function(spec, opts) {
-		var c = DB.findOne(spec, opts)
-		c.execAsync = thenify(c.exec.bind(c))
-		return c
-	}
-
-	for (var mbr in DB) {
-		if (typeof DB[mbr] !== 'function')
-			continue
-		DB[mbr + 'Async'] = thenify(DB[mbr])
-	}
-
-	return DB
+	var nedbInstance = new NedbDatastore(options)
+	return fromInstance(nedbInstance)
 }
 
 // so that import { datastore } still works:
 datastore.datastore = datastore
+datastore.fromInstance = fromInstance
 
 module.exports = datastore
