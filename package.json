@@ -1,6 +1,6 @@
 {
   "name": "nedb-promise",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A promise wrapper around the nedb package",
   "keywords": [
     "nedb",
