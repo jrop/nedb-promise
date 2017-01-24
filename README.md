@@ -1,6 +1,8 @@
 nedb-promise
 ============
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/jrop/nedb-promise.svg)](https://greenkeeper.io/)
+
 A promise wrapper for [NeDB](https://github.com/louischatriot/nedb).
 
 Installation
