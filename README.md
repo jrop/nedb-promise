@@ -14,7 +14,7 @@ Usage
 =====
 
 Example using ES7 async/await:
-```
+```javascript
 import datastore from 'nedb-promise'
 
 async function doDatabaseStuff() {
@@ -52,7 +52,7 @@ Returns an object that proxies to an internal `nedb.Datastore` instance (`option
 
 It also includes extension methods `cfind(...)`, `cfindOne(...)`, and `ccount(...)` that return promisified cursors, so that you may do:
 
-```
+```javascript
 let results = await myDataStore.cfind({ moo: 'goo' })
   .projection({ moo: 1, _id: 0 }) // see NeDB cursor methods
   .exec()
